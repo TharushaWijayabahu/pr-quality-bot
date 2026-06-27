@@ -40,7 +40,7 @@ jobs:
   pr-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Run PR Quality Bot
         uses: TharushaWijayabahu/pr-quality-bot@v1
