@@ -1,4 +1,12 @@
-import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import {
+  closeSync,
+  constants,
+  fstatSync,
+  openSync,
+  readSync,
+  realpathSync,
+  statSync,
+} from 'node:fs';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 
 export interface ExistingFile {
@@ -33,23 +41,58 @@ export function readWorkspaceFile(
   }
 
   const absolutePath = resolve(workspace, path);
-  if (!existsSync(absolutePath)) return undefined;
-
-  const workspaceRoot = realpathSync(workspace);
-  const canonicalPath = realpathSync(absolutePath);
-  if (!isPathWithin(workspaceRoot, canonicalPath)) {
-    throw new Error(`Path '${path}' resolves outside the GitHub workspace.`);
+  let descriptor: number;
+  try {
+    descriptor = openSync(absolutePath, constants.O_RDONLY | constants.O_NOFOLLOW);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') return undefined;
+    if (code === 'ELOOP') {
+      throw new Error(`Path '${path}' must not be a symbolic link.`);
+    }
+    throw error;
   }
 
-  const stats = statSync(canonicalPath);
-  if (!stats.isFile()) return undefined;
-  if (stats.size > maxBytes) {
-    throw new Error(
-      `File '${path}' is too large to process (${stats.size} bytes; maximum ${maxBytes} bytes).`,
-    );
-  }
+  try {
+    const stats = fstatSync(descriptor);
+    if (!stats.isFile()) return undefined;
 
-  return { path, absolutePath: canonicalPath, content: readFileSync(canonicalPath, 'utf8') };
+    let canonicalPath: string;
+    try {
+      canonicalPath = realpathSync(absolutePath);
+    } catch {
+      throw new Error(`Path '${path}' changed while it was being opened.`);
+    }
+    const workspaceRoot = realpathSync(workspace);
+    if (!isPathWithin(workspaceRoot, canonicalPath)) {
+      throw new Error(`Path '${path}' resolves outside the GitHub workspace.`);
+    }
+    const pathStats = statSync(canonicalPath);
+    if (pathStats.dev !== stats.dev || pathStats.ino !== stats.ino) {
+      throw new Error(`Path '${path}' changed while it was being opened.`);
+    }
+
+    if (stats.size > maxBytes) {
+      throw new Error(
+        `File '${path}' is too large to process (${stats.size} bytes; maximum ${maxBytes} bytes).`,
+      );
+    }
+
+    const buffer = Buffer.allocUnsafe(stats.size);
+    let bytesRead = 0;
+    while (bytesRead < buffer.length) {
+      const count = readSync(descriptor, buffer, bytesRead, buffer.length - bytesRead, bytesRead);
+      if (count === 0) break;
+      bytesRead += count;
+    }
+    return {
+      path,
+      absolutePath: canonicalPath,
+      content: buffer.subarray(0, bytesRead).toString('utf8'),
+    };
+  } finally {
+    closeSync(descriptor);
+  }
 }
 
 export function findFirstExistingFile(

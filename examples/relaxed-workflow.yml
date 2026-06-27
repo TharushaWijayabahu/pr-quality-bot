@@ -6,16 +6,17 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
-  issues: write
+  pull-requests: write
 
 jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
+      # The action can still analyze PR metadata and changed files without coverage enforcement.
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: TharushaWijayabahu/pr-quality-bot@v1
         with:
+          # pull-requests: write allows the bot to publish or update its PR comment.
           github-token: ${{ secrets.GITHUB_TOKEN }}
           require-linked-issue: 'false'
           min-coverage: '0'

@@ -48,4 +48,21 @@ describe('publishComment', () => {
       body: 'New report',
     });
   });
+
+  it('creates a new comment when the marker is missing', async () => {
+    const { client, updateComment, createComment } = clientWithComments([
+      { id: 1, body: 'Other comment' },
+    ]);
+
+    await expect(publishComment(client, 'owner', 'repo', 7, marker, 'New report')).resolves.toBe(
+      'created',
+    );
+    expect(createComment).toHaveBeenCalledWith({
+      owner: 'owner',
+      repo: 'repo',
+      issue_number: 7,
+      body: 'New report',
+    });
+    expect(updateComment).not.toHaveBeenCalled();
+  });
 });

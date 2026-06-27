@@ -21,12 +21,24 @@ describe('workspace file safety', () => {
 
   it('rejects symlinks that resolve outside the workspace', () => {
     const workspace = mkdtempSync(join(tmpdir(), 'pr-quality-workspace-'));
-    const outside = join(tmpdir(), `pr-quality-report-${Date.now()}.info`);
+    const outsideDirectory = mkdtempSync(join(tmpdir(), 'pr-quality-outside-'));
+    const outside = join(outsideDirectory, 'report.info');
     writeFileSync(outside, 'LF:1\nLH:1\n');
     symlinkSync(outside, join(workspace, 'report.info'));
 
     expect(() => readWorkspaceFile('report.info', workspace)).toThrow(
-      'resolves outside the GitHub workspace',
+      'must not be a symbolic link',
+    );
+  });
+
+  it('rejects symlinks even when they resolve inside the workspace', () => {
+    const workspace = mkdtempSync(join(tmpdir(), 'pr-quality-workspace-'));
+    const target = join(workspace, 'target.info');
+    writeFileSync(target, 'LF:1\nLH:1\n');
+    symlinkSync(target, join(workspace, 'report.info'));
+
+    expect(() => readWorkspaceFile('report.info', workspace)).toThrow(
+      'must not be a symbolic link',
     );
   });
 

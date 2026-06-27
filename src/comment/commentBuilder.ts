@@ -2,14 +2,25 @@ import type { AnalysisSummary } from '../models/types';
 
 const MAX_CELL_LENGTH = 4_000;
 
+function escapeCellCharacter(character: string): string {
+  switch (character) {
+    case '&':
+      return '&amp;';
+    case '<':
+      return '&lt;';
+    case '>':
+      return '&gt;';
+    case '@':
+      return '&#64;';
+    case '|':
+      return '\\|';
+    default:
+      return ' ';
+  }
+}
+
 function cell(value: string): string {
-  const escaped = value
-    .replace(/&/gu, '&amp;')
-    .replace(/</gu, '&lt;')
-    .replace(/>/gu, '&gt;')
-    .replace(/@/gu, '&#64;')
-    .replace(/\|/gu, '\\|')
-    .replace(/\r?\n/gu, ' ');
+  const escaped = value.replace(/[&<>@|]|\r\n|[\r\n]/gu, escapeCellCharacter);
   return escaped.length > MAX_CELL_LENGTH ? `${escaped.slice(0, MAX_CELL_LENGTH - 1)}…` : escaped;
 }
 

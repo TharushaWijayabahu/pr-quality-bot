@@ -2,11 +2,13 @@
 
 Describe the change and why it is needed.
 
-Fixes #
+Related issue: #
 
-## Validation
+## Changes
 
-- [ ] Tests added or updated
+## Testing
+
+- [ ] Added or updated tests
 - [ ] `npm run all` passes locally
 - [ ] Documentation updated where needed
 - [ ] `dist/` rebuilt when action code changed

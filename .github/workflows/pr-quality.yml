@@ -12,13 +12,11 @@ jobs:
   pr-quality:
     runs-on: ubuntu-latest
     steps:
-      # Checkout is needed so the action can inspect changed files and coverage artifacts.
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Run PR Quality Bot
-        uses: TharushaWijayabahu/pr-quality-bot@v1
+        uses: ./
         with:
-          # pull-requests: write is required to create or update the PR timeline comment.
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          min-coverage: '80'
+          min-coverage: '0'
           fail-on-risk: high

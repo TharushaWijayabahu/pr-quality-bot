@@ -3,7 +3,7 @@ import { mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { loadConfig } from '../src/config';
+import { defaultConfig, loadConfig } from '../src/config';
 
 vi.mock('@actions/core', () => ({
   getInput: vi.fn(),
@@ -32,12 +32,13 @@ describe('loadConfig', () => {
 
   it('rejects a config symlink that resolves outside the workspace', () => {
     const workspace = mkdtempSync(join(tmpdir(), 'pr-quality-workspace-'));
-    const outside = join(tmpdir(), `pr-quality-outside-${Date.now()}.yml`);
+    const outsideDirectory = mkdtempSync(join(tmpdir(), 'pr-quality-outside-'));
+    const outside = join(outsideDirectory, 'config.yml');
     writeFileSync(outside, 'coverage:\n  min: 0\n');
     symlinkSync(outside, join(workspace, 'config.yml'));
     setupInputs({ 'config-path': 'config.yml' });
 
-    expect(() => loadConfig(workspace)).toThrow('resolves outside the GitHub workspace');
+    expect(() => loadConfig(workspace)).toThrow('must not be a symbolic link');
   });
 
   it('rejects regular expressions with unsafe backtracking', () => {
@@ -54,5 +55,33 @@ describe('loadConfig', () => {
     setupInputs({ 'config-path': 'config.yml' });
 
     expect(() => loadConfig(workspace)).toThrow('namespaced HTML comment');
+  });
+
+  it('allows missing config files and uses defaults', () => {
+    const workspace = mkdtempSync(join(tmpdir(), 'pr-quality-workspace-'));
+    setupInputs({});
+
+    const config = loadConfig(workspace);
+
+    expect(config).toMatchObject(defaultConfig);
+  });
+
+  it('lets workflow inputs override the config file values', () => {
+    const workspace = mkdtempSync(join(tmpdir(), 'pr-quality-workspace-'));
+    writeFileSync(join(workspace, 'config.yml'), 'coverage:\n  min: 90\n');
+    setupInputs({ 'config-path': 'config.yml', 'min-coverage': '75', 'fail-on-risk': 'medium' });
+
+    const config = loadConfig(workspace);
+
+    expect(config.coverage.min).toBe(75);
+    expect(config.risk.failOn).toBe('medium');
+  });
+
+  it('rejects invalid numeric thresholds', () => {
+    const workspace = mkdtempSync(join(tmpdir(), 'pr-quality-workspace-'));
+    writeFileSync(join(workspace, 'config.yml'), 'changeSize:\n  maxAdditions: -2\n');
+    setupInputs({ 'config-path': 'config.yml' });
+
+    expect(() => loadConfig(workspace)).toThrow('non-negative number');
   });
 });

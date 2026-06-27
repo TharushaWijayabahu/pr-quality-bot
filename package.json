@@ -1,6 +1,6 @@
 {
   "name": "pr-quality-bot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "A configurable GitHub Action that reviews pull requests and calculates a quality risk score.",
   "repository": {
