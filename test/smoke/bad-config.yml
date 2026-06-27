@@ -1,0 +1,4 @@
+# Intentional smoke test config file.
+smokeTest:
+  enabled: true
+  reason: "validate risky yaml change detection"

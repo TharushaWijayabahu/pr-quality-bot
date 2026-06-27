@@ -161,6 +161,12 @@ Default failed-check weights are title `15`, linked issue `15`, coverage `25`, c
 
 The hidden marker lets each run update the same timeline comment instead of adding noise.
 
+## Demo
+
+See the real [PR Quality Bot smoke-test pull request](https://github.com/TharushaWijayabahu/pr-quality-bot/pull/3) and the [validation checklist](docs/assets/smoke-test-result.md).
+
+![PR Quality Bot smoke-test report](docs/assets/pr-quality-bot-smoke-test.png)
+
 ## Changelog generation
 
 Run the **Generate changelog** workflow manually and download its artifact, or run locally with `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, and optional `CHANGELOG_VERSION` set:
