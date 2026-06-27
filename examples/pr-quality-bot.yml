@@ -1,0 +1,36 @@
+title:
+  regex: '^(feat|fix|docs|refactor|test|chore)(?:\([a-zA-Z0-9._-]{1,64}\)|): .{10,256}$'
+
+linkedIssue:
+  required: true
+  regex: '(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#\d+|#[0-9]+|[A-Z]{2,10}-\d+'
+
+coverage:
+  min: 80
+  paths:
+    - coverage/lcov.info
+    - target/site/jacoco/jacoco.xml
+    - build/reports/jacoco/test/jacocoTestReport.xml
+    - coverage/cobertura-coverage.xml
+
+changeSize:
+  maxFilesChanged: 25
+  maxAdditions: 500
+  maxDeletions: 300
+  largeFileThresholdKb: 500
+
+todo:
+  max: 0
+  keywords: [TODO, FIXME, HACK]
+
+risk:
+  failOn: high
+  weights:
+    title: 15
+    linkedIssue: 15
+    coverage: 25
+    changeSize: 25
+    todo: 20
+
+comment:
+  enabled: true

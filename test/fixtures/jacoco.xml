@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report name="example">
+  <counter type="INSTRUCTION" missed="10" covered="90"/>
+  <counter type="LINE" missed="10" covered="90"/>
+</report>

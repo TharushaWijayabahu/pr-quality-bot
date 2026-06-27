@@ -1,0 +1,2 @@
+<!DOCTYPE coverage [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<coverage line-rate="1"><packages>&xxe;</packages></coverage>

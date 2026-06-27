@@ -1,0 +1,16 @@
+[
+  {
+    "filename": "src/service.ts",
+    "additions": 12,
+    "deletions": 2,
+    "changes": 14,
+    "patch": "@@ -1,2 +1,4 @@\n const stable = true;\n+// TODO: add retry handling\n+const enabled = true;\n-// FIXME: removed issue"
+  },
+  {
+    "filename": ".github/workflows/deploy.yml",
+    "additions": 4,
+    "deletions": 1,
+    "changes": 5,
+    "patch": "@@ -1 +1,2 @@\n name: Deploy\n+run-name: deploy"
+  }
+]

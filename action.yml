@@ -1,0 +1,82 @@
+name: PR Quality Bot
+description: Review pull requests, calculate a quality risk score, and post an automated report.
+author: PR Quality Bot contributors
+branding:
+  icon: check-circle
+  color: green
+
+inputs:
+  github-token:
+    description: GitHub token used to read PR data and post comments
+    required: false
+    default: ${{ github.token }}
+  config-path:
+    description: Path to optional PR Quality Bot config file
+    required: false
+    default: .github/pr-quality-bot.yml
+  title-regex:
+    description: Regex used to validate PR title
+    required: false
+    default: '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\([a-zA-Z0-9._-]{1,64}\)|)!?: .{10,256}$'
+  require-linked-issue:
+    description: Require linked issue in PR title or body
+    required: false
+    default: 'true'
+  linked-issue-regex:
+    description: Regex for linked issues
+    required: false
+    default: '(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#\d+|#[0-9]+|[A-Z]{2,10}-\d+'
+  coverage-report-paths:
+    description: Comma separated coverage report paths
+    required: false
+    default: 'coverage/lcov.info,target/site/jacoco/jacoco.xml,build/reports/jacoco/test/jacocoTestReport.xml,coverage/cobertura-coverage.xml'
+  min-coverage:
+    description: Minimum coverage percentage
+    required: false
+    default: '80'
+  max-files-changed:
+    description: Maximum number of files changed before risk increases
+    required: false
+    default: '25'
+  max-additions:
+    description: Maximum lines added before risk increases
+    required: false
+    default: '500'
+  max-deletions:
+    description: Maximum lines deleted before risk increases
+    required: false
+    default: '300'
+  large-file-threshold-kb:
+    description: File size threshold in KB before file is flagged
+    required: false
+    default: '500'
+  todo-fixme-max:
+    description: Maximum TODO/FIXME comments allowed in changed lines
+    required: false
+    default: '0'
+  fail-on-risk:
+    description: 'Fail action when risk reaches this level: none, medium, or high'
+    required: false
+    default: high
+  post-comment:
+    description: Post or update PR comment
+    required: false
+    default: 'true'
+  comment-marker:
+    description: Hidden marker used to update the same bot comment
+    required: false
+    default: '<!-- pr-quality-bot-comment -->'
+
+outputs:
+  risk-score:
+    description: Numeric risk score from 0 to 100
+  risk-level:
+    description: low, medium, or high
+  passed:
+    description: true or false
+  summary-json:
+    description: JSON summary of all analyzer results
+
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,0 +1,24 @@
+name: Strict PR quality checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: TharushaWijayabahu/pr-quality-bot@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage: '90'
+          max-files-changed: '15'
+          max-additions: '250'
+          max-deletions: '150'
+          fail-on-risk: medium

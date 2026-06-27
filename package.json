@@ -1,0 +1,57 @@
+{
+  "name": "pr-quality-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A configurable GitHub Action that reviews pull requests and calculates a quality risk score.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TharushaWijayabahu/pr-quality-bot.git"
+  },
+  "homepage": "https://github.com/TharushaWijayabahu/pr-quality-bot#readme",
+  "bugs": {
+    "url": "https://github.com/TharushaWijayabahu/pr-quality-bot/issues"
+  },
+  "main": "dist/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "typecheck": "tsc",
+    "build": "npm run typecheck && ncc build src/index.ts -o dist --source-map",
+    "changelog": "tsx src/changelog/changelogGenerator.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "all": "npm run format:check && npm run lint && npm test && npm run build"
+  },
+  "keywords": [
+    "github-actions",
+    "pull-request",
+    "code-quality",
+    "risk-analysis"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "fast-xml-parser": "^5.2.5",
+    "js-yaml": "^4.1.0",
+    "safe-regex2": "5.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.15.32",
+    "@vercel/ncc": "^0.38.3",
+    "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.5",
+    "prettier": "^3.5.3",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.1",
+    "vitest": "^3.2.4"
+  }
+}
