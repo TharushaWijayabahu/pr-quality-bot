@@ -4,9 +4,9 @@
 [![CodeQL](https://github.com/TharushaWijayabahu/pr-quality-bot/actions/workflows/codeql.yml/badge.svg)](https://github.com/TharushaWijayabahu/pr-quality-bot/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-PR Quality Bot is a configurable GitHub Action designed to review pull requests, calculate a quality risk score, and publish a concise report comment without introducing a hosted service or database.
+Designed to help maintainers review pull request risk using deterministic checks.
 
-## Problem statement
+## Problem
 
 Pull request review standards are often documented but applied inconsistently. This action supports lightweight, repeatable checks for titles, linked issues, coverage, change size, and TODO markers, while keeping the workflow fully inside GitHub Actions.
 
@@ -60,11 +60,9 @@ Checkout is needed for local file-size checks and coverage artifact discovery. P
 3. Treat the report as a signal for maintainers rather than a replacement for review.
 4. Use the outputs for follow-up automation where helpful.
 
-## Dogfood and self-test
+This repository also dogfoods the action. A read-only job exercises PR branch code with comment publishing disabled; a separate privileged workflow publishes reports using an immutable reviewed action revision without checking out PR code.
 
-This repository also dogfoods its own action through [.github/workflows/pr-quality.yml](.github/workflows/pr-quality.yml). The workflow uses `uses: ./` so the local action entry point is exercised directly.
-
-## Configuration file
+## Configuration
 
 The default config path is `.github/pr-quality-bot.yml`. Copy the complete example from [examples/pr-quality-bot.yml](examples/pr-quality-bot.yml), or start with:
 
@@ -156,7 +154,7 @@ The default scoring weights are title `15`, linked issue `15`, coverage `25`, ch
 
 `fail-on-risk` changes the action failure threshold without changing the score or level. A missing or unreadable coverage report is treated as a warning with zero risk points rather than a crash.
 
-## Sample comment
+## Sample PR comment
 
 > ## PR Quality Bot Report
 >
@@ -173,6 +171,12 @@ The default scoring weights are title `15`, linked issue `15`, coverage `25`, ch
 
 The hidden marker allows each run to update the same timeline comment instead of adding noise.
 
+## Demo
+
+The bot was validated on [smoke-test PR #3](https://github.com/TharushaWijayabahu/pr-quality-bot/pull/3). The report comment was created once, updated in place on later runs, and improved from 55/100 (Medium) to 25/100 (Low) after the title and linked issue were corrected.
+
+See the [validation record](docs/assets/smoke-test-result.md) and [real PR screenshot](docs/assets/pr-quality-bot-smoke-test.png).
+
 ## Changelog generation
 
 Run the Generate changelog workflow manually and download its artifact, or run locally with `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, and an optional `CHANGELOG_VERSION` set:
@@ -183,19 +187,23 @@ npm run changelog
 
 Merged PRs since the latest Git tag are grouped into Features, Fixes, Documentation, Refactoring, Performance, Tests, Maintenance, and Other sections. Each entry includes its PR number and author.
 
-## Demo
-
-The bot was validated on [smoke-test PR #3](https://github.com/TharushaWijayabahu/pr-quality-bot/pull/3). The report comment was created once, updated in place on later runs, and improved from 55/100 (Medium) to 25/100 (Low) after the title and linked issue were corrected.
-
-See the [validation record](docs/assets/smoke-test-result.md) and [real PR screenshot](docs/assets/pr-quality-bot-smoke-test.png).
-
 ## Security and permissions
 
-The recommended permissions are `contents: read` and `pull-requests: write`. Write access is needed for timeline comments; if it is unavailable, analysis, logs, and outputs still work.
+The recommended permissions are `contents: read` and `pull-requests: write`. PR Quality Bot posts normal PR timeline comments. GitHub treats pull requests as issues for timeline comments, but `pull-requests: write` is the recommended permission for the documented workflow. Some repository policies may require `issues: write`; if comment publishing fails, add it based on your organization policy. Use the minimum permissions required by your repository policy.
 
-This action uses `pull_request` rather than `pull_request_target` so untrusted code is not checked out with elevated privileges. Fork PR comments may be limited by GitHub token permissions, but the action still provides logs and outputs. Treat coverage files and checked-out PR code as untrusted. PR Quality Bot parses reports locally and never executes changed code. Configuration and report paths are constrained to the workspace, symlink escapes and XML entity declarations are rejected, report sizes are bounded, and configurable regular expressions are checked for unsafe backtracking. Pin the action to a release tag or full commit SHA according to your dependency policy. See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+In this repository's dogfood setup, coverage enforcement is disabled because the bot runs before a coverage artifact is generated. User projects can enable coverage by setting `min-coverage` and generating coverage reports before running the action.
 
-## Development
+### Security model
+
+1. The local validation workflow runs `uses: ./` with read-only permissions and `post-comment: false`.
+2. The reporting workflow uses an immutable reviewed revision of PR Quality Bot, not PR branch code.
+3. The reporting workflow does not check out or execute PR-controlled code.
+4. No artifacts or outputs pass from the read-only workflow into the privileged workflow.
+5. `pull_request_target` is used only for trusted reporting without an untrusted checkout.
+
+Treat pull request metadata, patches, configuration, and coverage reports as untrusted data. Configuration and report paths are constrained to the workspace, symlinks and XML entity declarations are rejected, report sizes are bounded, and configurable regular expressions are checked for unsafe backtracking. Pin the action to a release tag or full commit SHA according to your dependency policy. See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+
+## Local development
 
 Node.js 22 or newer is required.
 
@@ -209,6 +217,8 @@ npm run all
 ## Roadmap
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for the next planned improvements.
+
+## Contributing
 
 Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before opening a change.
 

@@ -2,6 +2,8 @@
 
 This guide explains how to verify the bot on a real pull request in a way that is safe, observable, and repeatable.
 
+The completed reference run is [smoke-test PR #3](https://github.com/TharushaWijayabahu/pr-quality-bot/pull/3). Smoke-test pull requests are temporary validation fixtures and must not be merged.
+
 ## 1. Create a test branch
 
 Create a branch named `test/pr-quality-bot-smoke-test` and open a pull request from it.
