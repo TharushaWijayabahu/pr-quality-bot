@@ -1,6 +1,11 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GitHubClient } from '../src/githubClient';
 import { publishComment } from '../src/comment/commentPublisher';
+import { logger } from '../src/utils/logger';
+
+vi.mock('../src/utils/logger', () => ({
+  logger: { warning: vi.fn() },
+}));
 
 interface MockComment {
   id: number;
@@ -20,6 +25,10 @@ function clientWithComments(comments: MockComment[]) {
 
 describe('publishComment', () => {
   const marker = '<!-- pr-quality-bot-comment -->';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('updates a report whose first line is the exact marker', async () => {
     const { client, updateComment, createComment } = clientWithComments([
@@ -116,5 +125,8 @@ describe('publishComment', () => {
       issue_number: 7,
       body: 'New report',
     });
+    expect(logger.warning).toHaveBeenCalledWith(
+      'Could not update the existing report comment (HTTP 403); creating a new comment.',
+    );
   });
 });
