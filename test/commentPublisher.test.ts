@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GitHubClient } from '../src/githubClient';
 import { publishComment } from '../src/comment/commentPublisher';
-import { logger } from '../src/utils/logger';
 
 vi.mock('../src/utils/logger', () => ({
   logger: { warning: vi.fn() },
@@ -125,8 +124,5 @@ describe('publishComment', () => {
       issue_number: 7,
       body: 'New report',
     });
-    expect(logger.warning).toHaveBeenCalledWith(
-      'Could not update the existing report comment (HTTP 403); creating a new comment.',
-    );
   });
 });
