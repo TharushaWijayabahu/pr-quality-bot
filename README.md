@@ -60,7 +60,7 @@ Checkout is needed for local file-size checks and coverage artifact discovery. P
 3. Treat the report as a signal for maintainers rather than a replacement for review.
 4. Use the outputs for follow-up automation where helpful.
 
-This repository also dogfoods the action. A read-only job exercises PR branch code with comment publishing disabled; a separate privileged workflow publishes reports using an immutable reviewed action revision without checking out PR code.
+This repository also dogfoods the action. The [local workflow](.github/workflows/pr-quality.yml) exercises PR branch code read-only with comment publishing disabled; the [reporting workflow](.github/workflows/pr-quality-report.yml) publishes reports using an immutable reviewed action revision without checking out PR code.
 
 ## Configuration
 

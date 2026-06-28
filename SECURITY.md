@@ -18,6 +18,6 @@ Never include active tokens, private repository content, or other secrets in a r
 
 ## Security model
 
-PR Quality Bot treats pull request metadata, patches, configuration, and coverage reports as untrusted data. It does not execute changed code. File reads are constrained to canonical paths inside the checkout and bounded by size; XML entities and unsafe configurable regular expressions are rejected.
+PR Quality Bot treats pull request metadata, patches, configuration, and coverage reports as untrusted data. The released action inspects changed application code as data rather than executing it. This repository's local dogfood job may execute action code from a PR branch, but only with read-only permissions and comment publishing disabled. Privileged reporting uses an immutable reviewed action revision without checking out PR code. File reads are constrained to canonical paths inside the checkout and bounded by size; XML entities and unsafe configurable regular expressions are rejected.
 
 The action is a quality-policy aid, not a security boundary. Repository administrators remain responsible for branch protection, workflow permissions, dependency review, and human review of sensitive changes.
