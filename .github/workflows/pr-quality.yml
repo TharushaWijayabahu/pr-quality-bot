@@ -1,0 +1,28 @@
+name: PR Quality Bot
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  local-dogfood:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Run local PR Quality Bot without comment publishing
+        uses: ./
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          post-comment: 'false'
+          # Dogfood runs before coverage artifacts are generated, so coverage enforcement is disabled here.
+          min-coverage: '0'
+          fail-on-risk: high
+          # This repository documents marker detection, so dogfood mode allows a small number of documentation references.
+          todo-fixme-max: '10'

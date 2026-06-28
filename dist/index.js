@@ -33218,20 +33218,58 @@ function readWorkspaceFile(path, workspace = process.cwd(), maxBytes = MAX_COVER
         throw new Error(`Path '${path}' must be inside the GitHub workspace.`);
     }
     const absolutePath = (0,external_node_path_namespaceObject.resolve)(workspace, path);
-    if (!(0,external_node_fs_namespaceObject.existsSync)(absolutePath))
-        return undefined;
-    const workspaceRoot = (0,external_node_fs_namespaceObject.realpathSync)(workspace);
-    const canonicalPath = (0,external_node_fs_namespaceObject.realpathSync)(absolutePath);
-    if (!isPathWithin(workspaceRoot, canonicalPath)) {
-        throw new Error(`Path '${path}' resolves outside the GitHub workspace.`);
+    let descriptor;
+    try {
+        descriptor = (0,external_node_fs_namespaceObject.openSync)(absolutePath, external_node_fs_namespaceObject.constants.O_RDONLY | external_node_fs_namespaceObject.constants.O_NOFOLLOW);
     }
-    const stats = (0,external_node_fs_namespaceObject.statSync)(canonicalPath);
-    if (!stats.isFile())
-        return undefined;
-    if (stats.size > maxBytes) {
-        throw new Error(`File '${path}' is too large to process (${stats.size} bytes; maximum ${maxBytes} bytes).`);
+    catch (error) {
+        const code = error.code;
+        if (code === 'ENOENT')
+            return undefined;
+        if (code === 'ELOOP') {
+            throw new Error(`Path '${path}' must not be a symbolic link.`);
+        }
+        throw error;
     }
-    return { path, absolutePath: canonicalPath, content: (0,external_node_fs_namespaceObject.readFileSync)(canonicalPath, 'utf8') };
+    try {
+        const stats = (0,external_node_fs_namespaceObject.fstatSync)(descriptor);
+        if (!stats.isFile())
+            return undefined;
+        let canonicalPath;
+        try {
+            canonicalPath = (0,external_node_fs_namespaceObject.realpathSync)(absolutePath);
+        }
+        catch {
+            throw new Error(`Path '${path}' changed while it was being opened.`);
+        }
+        const workspaceRoot = (0,external_node_fs_namespaceObject.realpathSync)(workspace);
+        if (!isPathWithin(workspaceRoot, canonicalPath)) {
+            throw new Error(`Path '${path}' resolves outside the GitHub workspace.`);
+        }
+        const pathStats = (0,external_node_fs_namespaceObject.statSync)(canonicalPath);
+        if (pathStats.dev !== stats.dev || pathStats.ino !== stats.ino) {
+            throw new Error(`Path '${path}' changed while it was being opened.`);
+        }
+        if (stats.size > maxBytes) {
+            throw new Error(`File '${path}' is too large to process (${stats.size} bytes; maximum ${maxBytes} bytes).`);
+        }
+        const buffer = Buffer.allocUnsafe(stats.size);
+        let bytesRead = 0;
+        while (bytesRead < buffer.length) {
+            const count = (0,external_node_fs_namespaceObject.readSync)(descriptor, buffer, bytesRead, buffer.length - bytesRead, bytesRead);
+            if (count === 0)
+                break;
+            bytesRead += count;
+        }
+        return {
+            path,
+            absolutePath: canonicalPath,
+            content: buffer.subarray(0, bytesRead).toString('utf8'),
+        };
+    }
+    finally {
+        (0,external_node_fs_namespaceObject.closeSync)(descriptor);
+    }
 }
 function findFirstExistingFile(paths, workspace = process.cwd()) {
     for (const path of paths) {
@@ -40454,14 +40492,24 @@ function escapeRegex(value) {
 
 ;// CONCATENATED MODULE: ./src/comment/commentBuilder.ts
 const MAX_CELL_LENGTH = 4_000;
-function cell(value) {
-    const escaped = value
-        .replace(/&/gu, '&amp;')
-        .replace(/</gu, '&lt;')
-        .replace(/>/gu, '&gt;')
-        .replace(/@/gu, '&#64;')
-        .replace(/\|/gu, '\\|')
-        .replace(/\r?\n/gu, ' ');
+function escapeCellCharacter(character) {
+    switch (character) {
+        case '&':
+            return '&amp;';
+        case '<':
+            return '&lt;';
+        case '>':
+            return '&gt;';
+        case '@':
+            return '&#64;';
+        case '|':
+            return '&#124;';
+        default:
+            return ' ';
+    }
+}
+function escapeMarkdownTableCell(value) {
+    const escaped = value.replace(/[&<>@|]|\r\n|[\r\n]/gu, escapeCellCharacter);
     return escaped.length > MAX_CELL_LENGTH ? `${escaped.slice(0, MAX_CELL_LENGTH - 1)}…` : escaped;
 }
 function commentBuilder_status(passed, warning) {
@@ -40505,7 +40553,9 @@ function buildComment(summary, marker) {
         ],
         ['TODO/FIXME', commentBuilder_status(summary.todo.passed, summary.todo.warning), summary.todo.message],
     ];
-    const table = rows.map((row) => `| ${row.map((value) => cell(value)).join(' | ')} |`).join('\n');
+    const table = rows
+        .map((row) => `| ${row.map((value) => escapeMarkdownTableCell(value)).join(' | ')} |`)
+        .join('\n');
     return `${marker}
 
 ## PR Quality Bot Report
@@ -40530,7 +40580,31 @@ ${recommendation}
 Generated by PR Quality Bot.`;
 }
 
+;// CONCATENATED MODULE: ./src/utils/logger.ts
+
+const logger = {
+    info(message) {
+        info(`[PR Quality Bot] ${message}`);
+    },
+    warning(message) {
+        warning(`[PR Quality Bot] ${message}`);
+    },
+};
+
 ;// CONCATENATED MODULE: ./src/comment/commentPublisher.ts
+
+function hasReportMarker(comment, marker) {
+    return comment.body === marker || Boolean(comment.body?.startsWith(`${marker}\n`));
+}
+function isTrustedBotComment(comment) {
+    const login = comment.user?.login ?? '';
+    return (comment.user?.type === 'Bot' && (login === 'github-actions[bot]' || login.endsWith('[bot]')));
+}
+function errorStatus(error) {
+    if (typeof error !== 'object' || error === null || !('status' in error))
+        return undefined;
+    return typeof error.status === 'number' ? error.status : undefined;
+}
 async function publishComment(client, owner, repo, issueNumber, marker, body) {
     const comments = await client.paginate(client.rest.issues.listComments, {
         owner,
@@ -40538,10 +40612,18 @@ async function publishComment(client, owner, repo, issueNumber, marker, body) {
         issue_number: issueNumber,
         per_page: 100,
     });
-    const existing = comments.find((comment) => comment.body === marker || comment.body?.startsWith(`${marker}\n`));
+    const existing = comments.find((comment) => hasReportMarker(comment, marker) && isTrustedBotComment(comment));
     if (existing) {
-        await client.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
-        return 'updated';
+        try {
+            await client.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            return 'updated';
+        }
+        catch (error) {
+            const status = errorStatus(error);
+            if (status !== 403 && status !== 404 && status !== 422)
+                throw error;
+            logger.warning(`Could not update the existing report comment (HTTP ${status}); creating a new comment.`);
+        }
     }
     await client.rest.issues.createComment({ owner, repo, issue_number: issueNumber, body });
     return 'created';
@@ -48199,17 +48281,6 @@ async function listPullRequestFiles(client, pullRequest) {
         ...(file.patch ? { patch: file.patch } : {}),
     }));
 }
-
-;// CONCATENATED MODULE: ./src/utils/logger.ts
-
-const logger = {
-    info(message) {
-        info(`[PR Quality Bot] ${message}`);
-    },
-    warning(message) {
-        warning(`[PR Quality Bot] ${message}`);
-    },
-};
 
 ;// CONCATENATED MODULE: ./src/index.ts
 

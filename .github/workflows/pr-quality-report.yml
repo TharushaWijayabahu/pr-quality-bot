@@ -1,0 +1,28 @@
+name: PR Quality Bot Report
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-quality-report-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      # This job intentionally performs no checkout and consumes no outputs or artifacts from PR code.
+      - name: Publish trusted PR Quality Bot report
+        uses: TharushaWijayabahu/pr-quality-bot@5923b83a1111a400288e7fb21dc78e2b4f70dc25
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          post-comment: 'true'
+          # No coverage artifact is generated or checked out in this trusted reporting job.
+          min-coverage: '0'
+          fail-on-risk: high
+          todo-fixme-max: '10'

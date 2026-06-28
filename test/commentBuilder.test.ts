@@ -5,10 +5,19 @@ import { analyzeLinkedIssue } from '../src/analyzers/linkedIssueAnalyzer';
 import { scoreRisk } from '../src/analyzers/riskScorer';
 import { analyzeTitle } from '../src/analyzers/titleAnalyzer';
 import { analyzeTodos } from '../src/analyzers/todoAnalyzer';
-import { buildComment } from '../src/comment/commentBuilder';
+import { buildComment, escapeMarkdownTableCell } from '../src/comment/commentBuilder';
 import { defaultConfig } from '../src/config';
 
 describe('buildComment', () => {
+  it.each([
+    ['a|b', 'a&#124;b'],
+    ['a\\|b', 'a\\&#124;b'],
+    ['|a|b|', '&#124;a&#124;b&#124;'],
+    ['header | value \\| more', 'header &#124; value \\&#124; more'],
+  ])('safely escapes Markdown table content %j', (input, expected) => {
+    expect(escapeMarkdownTableCell(input)).toBe(expected);
+  });
+
   it('renders the marker, score, checks, and recommendation', () => {
     const title = analyzeTitle(
       'feat(api): add customer search endpoint',

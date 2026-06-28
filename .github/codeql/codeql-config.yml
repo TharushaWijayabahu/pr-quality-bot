@@ -1,0 +1,4 @@
+name: PR Quality Bot CodeQL configuration
+
+paths-ignore:
+  - dist/**

@@ -2,14 +2,25 @@ import type { AnalysisSummary } from '../models/types';
 
 const MAX_CELL_LENGTH = 4_000;
 
-function cell(value: string): string {
-  const escaped = value
-    .replace(/&/gu, '&amp;')
-    .replace(/</gu, '&lt;')
-    .replace(/>/gu, '&gt;')
-    .replace(/@/gu, '&#64;')
-    .replace(/\|/gu, '\\|')
-    .replace(/\r?\n/gu, ' ');
+function escapeCellCharacter(character: string): string {
+  switch (character) {
+    case '&':
+      return '&amp;';
+    case '<':
+      return '&lt;';
+    case '>':
+      return '&gt;';
+    case '@':
+      return '&#64;';
+    case '|':
+      return '&#124;';
+    default:
+      return ' ';
+  }
+}
+
+export function escapeMarkdownTableCell(value: string): string {
+  const escaped = value.replace(/[&<>@|]|\r\n|[\r\n]/gu, escapeCellCharacter);
   return escaped.length > MAX_CELL_LENGTH ? `${escaped.slice(0, MAX_CELL_LENGTH - 1)}…` : escaped;
 }
 
@@ -57,7 +68,9 @@ export function buildComment(summary: AnalysisSummary, marker: string): string {
     ],
     ['TODO/FIXME', status(summary.todo.passed, summary.todo.warning), summary.todo.message],
   ];
-  const table = rows.map((row) => `| ${row.map((value) => cell(value)).join(' | ')} |`).join('\n');
+  const table = rows
+    .map((row) => `| ${row.map((value) => escapeMarkdownTableCell(value)).join(' | ')} |`)
+    .join('\n');
 
   return `${marker}
 
