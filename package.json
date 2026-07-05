@@ -46,7 +46,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.15.32",
     "@vercel/ncc": "^0.38.3",
-    "eslint": "^9.29.0",
+    "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.5",
     "prettier": "^3.5.3",
     "tsx": "^4.23.0",
