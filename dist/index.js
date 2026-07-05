@@ -33227,7 +33227,7 @@ function readWorkspaceFile(path, workspace = process.cwd(), maxBytes = MAX_COVER
         if (code === 'ENOENT')
             return undefined;
         if (code === 'ELOOP') {
-            throw new Error(`Path '${path}' must not be a symbolic link.`);
+            throw new Error(`Path '${path}' must not be a symbolic link.`, { cause: error });
         }
         throw error;
     }
@@ -43804,7 +43804,9 @@ function validateRegex(pattern, label, flags) {
         }
     }
     catch (error) {
-        throw new Error(`Invalid ${label}: ${error instanceof Error ? error.message : String(error)}`);
+        throw new Error(`Invalid ${label}: ${error instanceof Error ? error.message : String(error)}`, {
+            cause: error,
+        });
     }
 }
 function customInput(name) {

@@ -48,7 +48,7 @@ export function readWorkspaceFile(
     const code = (error as NodeJS.ErrnoException).code;
     if (code === 'ENOENT') return undefined;
     if (code === 'ELOOP') {
-      throw new Error(`Path '${path}' must not be a symbolic link.`);
+      throw new Error(`Path '${path}' must not be a symbolic link.`, { cause: error });
     }
     throw error;
   }
