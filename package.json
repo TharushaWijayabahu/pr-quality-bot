@@ -38,12 +38,11 @@
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
     "fast-xml-parser": "^5.2.5",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^5.2.1",
     "safe-regex2": "5.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
-    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.15.32",
     "@vercel/ncc": "^0.38.3",
     "eslint": "^9.29.0",

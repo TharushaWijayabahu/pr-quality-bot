@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import yaml from 'js-yaml';
+import { load as loadYaml } from 'js-yaml';
 import safeRegex from 'safe-regex2';
 import type { Config, FailOnRisk } from './models/types';
 import { isPathInsideWorkspace, readWorkspaceFile } from './utils/fileUtils';
@@ -84,7 +84,7 @@ function mergeConfig(base: Config, override: PartialConfig): Config {
 function readYamlConfig(path: string, workspace: string): PartialConfig {
   const file = readWorkspaceFile(path, workspace, MAX_CONFIG_BYTES);
   if (!file) return {};
-  const parsed: unknown = yaml.load(file.content);
+  const parsed: unknown = loadYaml(file.content);
   if (parsed === null || parsed === undefined) return {};
   if (typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error(`Configuration in ${path} must be a YAML object.`);
