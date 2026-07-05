@@ -94,11 +94,7 @@ export interface TodoResult {
 }
 
 export type AnalyzerResult =
-  | TitleResult
-  | LinkedIssueResult
-  | CoverageResult
-  | ChangeSizeResult
-  | TodoResult;
+  TitleResult | LinkedIssueResult | CoverageResult | ChangeSizeResult | TodoResult;
 
 export interface RiskResult {
   score: number;
