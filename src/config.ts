@@ -128,7 +128,9 @@ function validateRegex(pattern: string, label: string, flags?: string): void {
       throw new Error('pattern may cause catastrophic backtracking');
     }
   } catch (error) {
-    throw new Error(`Invalid ${label}: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Invalid ${label}: ${error instanceof Error ? error.message : String(error)}`, {
+      cause: error,
+    });
   }
 }
 
