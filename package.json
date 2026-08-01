@@ -44,7 +44,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^22.15.32",
+    "@types/node": "^26.1.2",
     "@vercel/ncc": "^0.44.1",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.5",
